@@ -1,4 +1,6 @@
 -- This Query is designed to get an overview of the progress on Challenges for Users
+-- Approx. QueryTime: 1min16sec
+
 
 /*
 Questions:
@@ -7,6 +9,8 @@ Questions:
 
 
 */
+
+DROP TABLE community.Challenges_Progress
 
 -- 1. Load all Events needed for Challenge Assigning and Completion
 SELECT  *
@@ -155,15 +159,25 @@ FROM
 )a
 ORDER BY OpenId
 
-SELECT *
+SELECT  *,
+		CONVERT(DATE, TimeChallengeAssigned) AS DateChallengeAssigned,
+		CONVERT(DATE, DateTimeEnded) AS DateEnded,
+		DATEDIFF(hour, TimeChallengeAssigned, DateTimeEnded) AS TimeDiff
 INTO community.Challenges_Progress
-FROM #ChallengesMerged
+FROM 
+(
+	SELECT *
+	FROM #ChallengesMerged
+)a
 
-
-
-
-
-
+LEFT JOIN
+(
+	SELECT  OpenId,
+			CompanyId
+	FROM PlatformAnalytics_PullPush_Platform_User_Current
+)b
+ON a.OpenId = b.OpenId
+WHERE NOT(CompanyId LIKE '%Mendix%')
 
 
 
