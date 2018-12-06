@@ -159,7 +159,7 @@ FROM
 )a
 ORDER BY OpenId
 
-SELECT  *,
+SELECT  a.*,
 		CONVERT(DATE, TimeChallengeAssigned) AS DateChallengeAssigned,
 		CONVERT(DATE, DateTimeEnded) AS DateEnded,
 		DATEDIFF(hour, TimeChallengeAssigned, DateTimeEnded) AS TimeDiff
