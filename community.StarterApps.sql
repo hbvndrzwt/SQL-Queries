@@ -1,24 +1,27 @@
 
 -- ##Use of Starter Apps##
 
+-- Use TemplateBrowserProjectCreationSucceeded
+-- Use PlatformAnalytics_Processed_Platform_ProjectsV2
+
 /*
 Columns needed: 
 
-ProjectId (Unique)
-OpenId
-Name (Starter) App
-Timestamp Download
+ProjectId (Unique): Get it from 'TemplateBrowserProjectCreationSucceeded' event, which is triggered when a user creates a new project from the Template Browser
+OpenId: Unique ID for the user who creates the Project
+Name (Starter) App: Use Template UUID from the 'TemplateBrowserProjectCreationSucceeded' event. Still need to link this to Template data gathered from the app (OData)
+Timestamp Project Creation succeeded
 Timestamp First Deploy (if available)
 TimeDiff
-#Users (so far)
-#Deploys (so far)
+#Users in the project (so far)
+#Deploys made on the project (so far)
 */
 
 /*
 Need to do:
 - Add Userinfo (exclude Mendix)
 - Add Number of Project Created (first app, second, etc..)
-
+- Retrieve Template data from the app
 
 */
 
@@ -26,29 +29,63 @@ Need to do:
 SELECT *
 INTO #Events
 FROM [PlatformAnalytics_PullPush_Platform_Event]
-WHERE EventType IN ('AppInviteSent', 'ProjectInviteSent', 'ProjectCreated', 'AppDownload', 'WmDeploySucceeded', 'WmDeployStarted', 'SandboxDeployed')
+WHERE EventType IN ('AppInviteSent', 'ProjectInviteSent', 'TemplateBrowserProjectCreationSucceeded', 'AppDownload', 'WmDeploySucceeded', 'WmDeployStarted', 'SandboxDeployed', 'ModelDeployed')
 
-SELECT  ExtraInfo1 AS ProjectID,
-		OpenID,
-		Timestamp AS DateTimeProjectCreated,
-		FirstDeployDateTime,
-		CONVERT(DATE, FirstDeployDateTime) AS FirstDeployDate,
-		DATEDIFF(minute, Timestamp, FirstDeployDateTime) AS TimeDiffFirstDeploy,
-		NumberOfDeploys
-FROM 
+
+
+SELECT *
+FROM
 (
-	SELECT *
-	FROM #Events
-	WHERE EventType = 'ProjectCreated'
+	SELECT  a.ProjectID,
+			TemplateID,
+			OpenID,
+			DateTimeProjectCreated,
+			FirstDeployDateTime,
+			CONVERT(DATE, FirstDeployDateTime) AS FirstDeployDate,
+			DATEDIFF(minute, DateTimeProjectCreated, FirstDeployDateTime) AS TimeDiffFirstDeploy,
+			NumberOfDeploys
+	FROM 
+	(
+		SELECT  ExtraInfo3 AS ProjectID,
+				ExtraInfo2 AS TemplateID,
+				OpenId,
+				Timestamp AS DateTimeProjectCreated
+		FROM #Events
+		WHERE EventType = 'TemplateBrowserProjectCreationSucceeded'
+		GROUP BY ExtraInfo3,
+				 ExtraInfo2,
+				 OpenId,
+				 Timestamp	
+	)a
+
+	LEFT JOIN
+	(
+		SELECT  ExtraInfo1 AS ProjectID,
+				MIN(Timestamp) AS FirstDeployDateTime,
+				COUNT(Timestamp) AS NumberOfDeploys
+		FROM #Events
+		WHERE EventType IN ('WmDeploySucceeded', 'SandboxDeployed', 'ModelDeployed')
+		GROUP BY ExtraInfo1
+	)b
+	ON a.ProjectID = b.ProjectID
 )a
 
 LEFT JOIN
 (
-	SELECT  ExtraInfo1 AS ProjectID,
-			MIN(Timestamp) AS FirstDeployDateTime,
-			COUNT(Timestamp) AS NumberOfDeploys
-	FROM #Events
-	WHERE EventType IN ('WmDeploySucceeded', 'SandboxDeployed')
-	GROUP BY ExtraInfo1
+	SELECT  S_UUID,
+			ProjectName,
+			CreatorCompanyPlatformName,
+			ProjectIsDeleted,
+			EnvironmentType,
+			AppType,
+			ProjectMemberCount,
+			FirstSandboxLogin,
+			AppStatus
+	FROM PlatformAnalytics_Processed_Platform_ProjectsV2
 )b
-ON a.ExtraInfo1 = b.ProjectID
+ON a.ProjectID = b.S_UUID
+WHERE CreatorCompanyPlatformName NOT LIKE '%Mendix%'
+
+
+
+
