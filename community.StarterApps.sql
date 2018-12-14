@@ -29,11 +29,12 @@ Need to do:
 SELECT *
 INTO #Events
 FROM [PlatformAnalytics_PullPush_Platform_Event]
-WHERE EventType IN ('AppInviteSent', 'ProjectInviteSent', 'TemplateBrowserProjectCreationSucceeded', 'AppDownload', 'WmDeploySucceeded', 'WmDeployStarted', 'SandboxDeployed', 'ModelDeployed')
+WHERE EventType IN ('AppInviteSent', 'ProjectInviteSent', 'TemplateBrowserProjectCreationSucceeded', 'AppDownload', 'WmDeploySucceeded', 'WmDeployStarted', 'SandboxDeployed', 'ModelDeployed', 'DeployAppPackage')
 
-
+DROP TABLE community.StarterApps_Templates
 
 SELECT *
+INTO community.StarterApps_Templates
 FROM
 (
 	SELECT  a.ProjectID,
@@ -64,7 +65,7 @@ FROM
 				MIN(Timestamp) AS FirstDeployDateTime,
 				COUNT(Timestamp) AS NumberOfDeploys
 		FROM #Events
-		WHERE EventType IN ('WmDeploySucceeded', 'SandboxDeployed', 'ModelDeployed')
+		WHERE EventType IN ('WmDeploySucceeded', 'SandboxDeployed', 'ModelDeployed', 'DeployAppPackage')
 		GROUP BY ExtraInfo1
 	)b
 	ON a.ProjectID = b.ProjectID
@@ -74,17 +75,21 @@ LEFT JOIN
 (
 	SELECT  S_UUID,
 			ProjectName,
+			CreatedDate,
 			CreatorCompanyPlatformName,
 			ProjectIsDeleted,
 			EnvironmentType,
 			AppType,
 			ProjectMemberCount,
 			FirstSandboxLogin,
+			LastSandboxLogin,
+			DATEDIFF(minute, CreatedDate, LastSandboxLogin) AS TimeDiffLastActiveDate,
 			AppStatus
 	FROM PlatformAnalytics_Processed_Platform_ProjectsV2
 )b
 ON a.ProjectID = b.S_UUID
 WHERE CreatorCompanyPlatformName NOT LIKE '%Mendix%'
+
 
 
 
