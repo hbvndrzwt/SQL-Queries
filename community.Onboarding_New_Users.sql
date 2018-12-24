@@ -1,4 +1,4 @@
-
+-- This query contains all users (key) and activity in their onboarding phase on the platform
 
 
 /*
@@ -9,6 +9,7 @@ Other Activity: 'StoryCreated', 'CompleteUserProfile', 'ProjectInviteSent', 'Com
 
 DROP TABLE community.Onboarding_New_Users
 
+-- 1. Load all Events belonging to one of the categories into a temporary table
 SELECT  *
 INTO #Events
 FROM PlatformAnalytics_PullPush_Platform_Event 
@@ -18,7 +19,7 @@ WHERE EventType IN('SandboxDeployed', 'WmDeploySucceeded', 'TeamserverCommit', '
 
 
 
-
+-- 4. Load the user & activation data into a temporary table
 SELECT	UserId,
 		CompanyId,
 		DisplayName,
@@ -62,6 +63,8 @@ FROM
 						THEN 'Invites'
 					ELSE 'Marketing Inbound'
 				END AS Source
+				
+		-- 2. Get all users from the user overview and left join signup & company info on that user		
 		FROM 
 		(
 			SELECT	OpenId, 
@@ -100,7 +103,7 @@ FROM
 	) a
 
 	-- Activation moment
-	-- Determine what the first date is of a deploy is for the user
+	-- 3. Determine what the first date is of a deploy is for the user and join that with user data
 	LEFT JOIN 
 	(
 		SELECT	OpenId,
@@ -116,10 +119,10 @@ FROM
 		GROUP BY OpenId
 	) b
 	ON a.OpenId = b.OpenId
-	WHERE MonthYear < dateadd(month,datediff(month,0,GETDATE()),0)
+	--WHERE MonthYear < dateadd(month,datediff(month,0,GETDATE()),0)
 ) a
 
-
+-- 5. Create a split in activity and add it to the #FullUsers table
 ;WITH DevActivityAdded AS
 (
 	SELECT  a.*,

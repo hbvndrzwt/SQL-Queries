@@ -1,5 +1,7 @@
 
+---------------------------
 -- ##Use of Starter Apps##
+---------------------------
 
 -- Use TemplateBrowserProjectCreationSucceeded
 -- Use PlatformAnalytics_Processed_Platform_ProjectsV2
@@ -19,9 +21,9 @@ TimeDiff
 
 /*
 Need to do:
-- Add Userinfo (exclude Mendix)
-- Add Number of Project Created (first app, second, etc..)
-- Retrieve Template data from the app
+- Add Userinfo (exclude Mendix) - DONE
+- Add Number of Project Created (first app, second, etc..) 
+- Retrieve Template data from the app - IS IN ODATA CONNECTION IN POWER BI 
 
 */
 

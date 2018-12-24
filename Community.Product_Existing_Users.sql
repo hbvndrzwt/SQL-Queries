@@ -1,7 +1,9 @@
 /*
 ==================================================================================================================
 Existing Active User Retention Rate
-==================================================================================================================
+==================================================================================================================]
+Estimation of runtime: 12m35s
+
 Definitions
 -----------
 - Existing User: For the last active day in a given month, the user performed an activity 30-60 days before that day. ( The user was active the month before a given month).
@@ -265,7 +267,7 @@ ON a.UserId = b.OpenIdSender AND a.MonthYear = b.YearMonth
 
 SELECT  *
 INTO community.Product_Existing_Users
-FROM #ExistingUsers	
+FROM #ExistingUsersTotal
 
 
 

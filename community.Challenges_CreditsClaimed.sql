@@ -5,11 +5,13 @@
 
 DROP TABLE community.Challenges_CreditsClaimed
 
+-- 1. Load all 'ChallengeCreditClaimed', 'ChallengeCompleted' events into a temporary table
 SELECT  *
 INTO #Events
 FROM PlatformAnalytics_PullPush_Platform_Event 
 WHERE EventType IN('ChallengeCreditClaimed', 'ChallengeCompleted')
 
+-- 2. Get all ChallengeCompleted events and group them by User & Challenge
 SELECT  a.OpenId,
 		a.ChallengeId,
 		CountCompletedChallenge,
@@ -35,6 +37,7 @@ FROM
 			 ChallengeId
 )a
 
+-- 3. Join CreditsClaimed events to user/challenge where the user claimed credits
 LEFT JOIN
 (
 	SELECT OpenId,
@@ -47,7 +50,7 @@ LEFT JOIN
 )b
 ON a.OpenId = b.OpenId AND a.ChallengeId = b.ChallengeId
 
-
+-- 4. Join User data and write to table in datalake
 SELECT a.*
 INTO community.Challenges_CreditsClaimed
 FROM

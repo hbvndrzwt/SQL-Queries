@@ -179,6 +179,17 @@ LEFT JOIN
 ON a.OpenId = b.OpenId
 WHERE NOT(CompanyId LIKE '%Mendix%')
 
+/*
+GROUP BY a.OpenId,
+		 a.ChallengeId,
+		 a.Status,
+		 b.Timestamp AS TimeChallengeAssigned,
+		 a.DateTimeEnded,
+		 LastChallengeEventChangedId,
+		 DateChallengeAssigned,
+		 DateEnded,
+		 TimeDiff
+*/
 
 
 
