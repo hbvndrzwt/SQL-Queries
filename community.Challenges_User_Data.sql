@@ -47,7 +47,7 @@ Activity data:
 
 */
 
--- 1. Load all Events relating to Challenges (after 1-11-2018 as before the data is not really good)
+-- 1. Load all Events relating to Challenges (after 1-11-2018 as before this date the data is not really good)
 SELECT  *
 INTO #ChallengeEvents
 FROM PlatformAnalytics_PullPush_Platform_Event 
@@ -81,7 +81,10 @@ SELECT  a.OpenId,
 		CASE WHEN LearnActivityLast30Days IS NULL THEN 0 ELSE LearnActivityLast30Days END AS LearnActivityLast30Days,
 		CASE WHEN ExploreActivityLast30Days IS NULL THEN 0 ELSE ExploreActivityLast30Days END AS ExploreActivityLast30Days,
 		CASE WHEN KnowledgeShareActivityLast30Days IS NULL THEN 0 ELSE KnowledgeShareActivityLast30Days END AS KnowledgeShareActivityLast30Days,
-		CASE WHEN SocialActivityLast30Days IS NULL THEN 0 ELSE SocialActivityLast30Days END AS SocialActivityLast30Days
+		CASE WHEN SocialActivityLast30Days IS NULL THEN 0 ELSE SocialActivityLast30Days END AS SocialActivityLast30Days,
+		HighestCert,
+		MxLevel,
+		GamificationPoints_Total
 		
 FROM 
 (
@@ -106,11 +109,14 @@ FROM
 -- 4. Add User/Company meta-data
 LEFT JOIN
 (
-	SELECT  OpenId,
+	SELECT  a.OpenId,
 			SignupDate,
 			Country,
 			DisplayName,
-			CompanyType
+			CompanyType,
+			HighestCert,
+			MxLevel,
+			GamificationPoints_Total
 	FROM
 	(
 		SELECT  OpenId,
@@ -128,6 +134,16 @@ LEFT JOIN
 		FROM PlatformAnalytics_PullPush_Platform_Company_Current
 	)b
 	ON a.CompanyId = b.CompanyId
+	
+	LEFT JOIN
+	(
+		SELECT  OpenId,
+				HighestCert,
+				Level AS MxLevel,
+				Total_points AS GamificationPoints_Total
+		FROM [community].[Gamification_User_Overview_4-1-2019]
+	)c
+	ON a.OpenId = c.OpenId
 )b
 ON a.OpenId = b.OpenId	
 
