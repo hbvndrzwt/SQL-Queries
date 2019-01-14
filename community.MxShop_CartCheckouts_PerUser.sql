@@ -4,7 +4,8 @@
 DROP TABLE community.MxShop_CartCheckouts_PerUser
 
 SELECT  OpenId,
-		COUNT(ExtraInfo1) AS CountOrders
+		CONVERT(DATE, Timestamp) AS OrderDate,
+		ExtraInfo1 AS OrderId
 INTO community.MxShop_CartCheckouts_PerUser
 FROM PlatformAnalytics_PullPush_Platform_Event AS a
 WHERE EventType IN ('MxShopCartCheckout')
@@ -15,4 +16,3 @@ AND OpenId =
 	WHERE a.OpenId = b.OpenId
 	AND CompanyId NOT LIKE '%Mendix%'
 )
-GROUP BY OpenId
