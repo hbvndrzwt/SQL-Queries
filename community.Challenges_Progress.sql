@@ -16,7 +16,7 @@ DROP TABLE community.Challenges_Progress
 SELECT  *
 INTO #Events
 FROM PlatformAnalytics_PullPush_Platform_Event 
-WHERE EventType IN('ChallengeAssigned', 'ChallengeCompleted', 'ChallengeExpired')
+WHERE EventType IN('ChallengeAssigned', 'ChallengeCompleted', 'ChallengeExpired', 'ChangedHighlightStatus')
 
 -- 2. Link the Correct Challenge Assigned to Challenge Expired events
 SELECT	a.OpenId,
@@ -160,24 +160,97 @@ FROM
 ORDER BY OpenId
 
 SELECT  a.*,
-		CONVERT(DATE, TimeChallengeAssigned) AS DateChallengeAssigned,
-		CONVERT(DATE, DateTimeEnded) AS DateEnded,
-		DATEDIFF(hour, TimeChallengeAssigned, DateTimeEnded) AS TimeDiff
+		CONVERT(DATE, a.TimeChallengeAssigned) AS DateChallengeAssigned,
+		CONVERT(DATE, a.DateTimeEnded) AS DateEnded,
+		DATEDIFF(hour, a.TimeChallengeAssigned, a.DateTimeEnded) AS TimeDiff
 INTO community.Challenges_Progress
 FROM 
 (
 	SELECT *
-	FROM #ChallengesMerged
+	FROM #ChallengesMerged as a
+	WHERE OpenId =
+	(
+		SELECT MAX(OpenId)
+		FROM PlatformAnalytics_PullPush_Platform_User_Current AS b
+		WHERE a.OpenId = b.OpenId
+		AND CompanyId NOT LIKE '%Mendix%'
+	)
 )a
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+-- Add HighlightStatus of Challenge
 LEFT JOIN
 (
-	SELECT  OpenId,
-			CompanyId
-	FROM PlatformAnalytics_PullPush_Platform_User_Current
+	SELECT	a.OpenId,
+			a.ChallengeId,
+			a.ChallengeHighlightedStatus,
+			b.Timestamp AS TimeChallengeAssigned,
+			a.DateTimeChallengeHighlighted,
+			LastChallengeEventChangedId
+	FROM
+	(
+		SELECT  a.OpenId,
+				a.ChallengeId,
+				a.DateTimeChallengeHighlighted,
+				ChallengeHighlightedStatus,
+				MAX(b.ChangedId) AS LastChallengeEventChangedId
+		FROM 
+		(
+			SELECT  OpenId,
+					Timestamp AS DateTimeChallengeHighlighted,
+					ExtraInfo1 AS ChallengeId,
+					ExtraInfo2 AS ChallengeHighlightedStatus
+			FROM #Events
+			WHERE EventType IN('ChangedHighlightStatus')
+			
+		)a
+		LEFT JOIN
+		(
+			SELECT  ChangedId,
+					OpenId,
+					ExtraInfo1 AS ChallengeId,
+					Timestamp AS DateTimeAssigned
+			FROM #Events
+			WHERE EventType IN ('ChallengeAssigned')
+			
+		)b
+		ON a.OpenId = b.OpenId AND a.ChallengeId = b.ChallengeId AND DateTimeAssigned < DateTimeChallengeHighlighted
+		GROUP BY	a.OpenId,
+					a.ChallengeId,
+					a.DateTimeChallengeHighlighted,
+					ChallengeHighlightedStatus
+	)a
+	LEFT JOIN
+	(
+		SELECT *
+		FROM #Events
+		WHERE EventType IN ('ChallengeAssigned')
+	)b
+	ON a.LastChallengeEventChangedId = b.ChangedId
 )b
-ON a.OpenId = b.OpenId
-WHERE NOT(CompanyId LIKE '%Mendix%')
+ON a.LastChallengeEventChangedId = b.LastChallengeEventChangedId
+*/
+
+
+
+
+
+
 
 /*
 GROUP BY a.OpenId,
