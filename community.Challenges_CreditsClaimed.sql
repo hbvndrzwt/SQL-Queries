@@ -5,6 +5,8 @@
 
 DROP TABLE community.Challenges_CreditsClaimed
 
+DROP TABLE community.Challenges_CreditsClaimed_Full
+
 -- 1. Load all 'ChallengeCreditClaimed', 'ChallengeCompleted' events into a temporary table
 SELECT  *
 INTO #Events
@@ -68,8 +70,15 @@ LEFT JOIN
 ON a.OpenId = b.OpenId
 WHERE NOT(CompanyId LIKE '%Mendix%')
 	
+
 	
-	
+-- Write an additional table with a list of all raw CreditsClaimed events
+SELECT  OpenId,
+		ExtraInfo1 AS ChallengeId,
+		Timestamp
+INTO community.Challenges_CreditsClaimed_Full
+FROM #Events
+WHERE EventType = 'ChallengeCreditClaimed'
 	
 	
 	

@@ -2,6 +2,7 @@
 ---------------------------
 -- ##Use of Starter Apps##
 ---------------------------
+-- Appr. QueryTime: 14m15s
 
 -- Use TemplateBrowserProjectCreationSucceeded
 -- Use PlatformAnalytics_Processed_Platform_ProjectsV2
@@ -44,8 +45,11 @@ FROM
 			OpenID,
 			DateTimeProjectCreated,
 			FirstDeployDateTime,
+			LastDeployDateTime,
 			CONVERT(DATE, FirstDeployDateTime) AS FirstDeployDate,
+			CONVERT(DATE, LastDeployDateTime) AS LastDeployDate,
 			DATEDIFF(minute, DateTimeProjectCreated, FirstDeployDateTime) AS TimeDiffFirstDeploy,
+			DATEDIFF(minute, DateTimeProjectCreated, LastDeployDateTime) AS TimeDiffLastDeploy,
 			NumberOfDeploys
 	FROM 
 	(
@@ -65,6 +69,7 @@ FROM
 	(
 		SELECT  ExtraInfo1 AS ProjectID,
 				MIN(Timestamp) AS FirstDeployDateTime,
+				MAX(Timestamp) AS LastDeployDateTime,
 				COUNT(Timestamp) AS NumberOfDeploys
 		FROM #Events
 		WHERE EventType IN ('WmDeploySucceeded', 'SandboxDeployed', 'ModelDeployed', 'DeployAppPackage')
