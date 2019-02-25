@@ -57,6 +57,8 @@ FROM SignupEvents
 			ExtraInfo3 AS ConfirmationHash
 	FROM #SignupEvents
 	WHERE EventType = 'MemberSignupCompleted' 
+	GROUP BY OpenId,
+			 ExtraInfo3
 )
 
 , SignupEmailSent AS
@@ -64,6 +66,7 @@ FROM SignupEvents
 	SELECT ExtraInfo1 AS ConfirmationHash
 	FROM #SignupEvents 
 	WHERE EventType = 'SignupConfirmationEmailSentSuccessful'
+	GROUP BY ExtraInfo1
 )
 
 , UniqueSignupFormVisit AS
@@ -81,7 +84,9 @@ FROM SignupEvents
         ExperimentId varchar(200) '$.Experiment.ID'
     ) AS J
 	WHERE EventType = 'MemberSignupFormVisit' AND ExtraInfo3 != ''
-	GROUP BY ExtraInfo1, J.GroupName, J.ExperimentId
+	GROUP BY ExtraInfo1, 
+			 J.GroupName, 
+			 J.ExperimentId
 )
 
 , JoinSignupSteps AS
@@ -173,7 +178,8 @@ FROM SignupEvents
 		SELECT *
 		FROM KeyGrowthMetrics
 	) b
-	ON a.OpenId = b.UserId
+	ON a.OpenId = b.UserId 
+	WHERE (SignupDate IS NULL OR FirstSignupPageVisit <= SignupDate)
 )
 
 
