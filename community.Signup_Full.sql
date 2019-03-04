@@ -99,6 +99,8 @@ FROM SignupEvents
 			Source,
 			AreaOfFocus,
 			JobRole,
+			--CASE WHEN ExperimentGroup = 'A' AND Experiment = 'Job role' THEN NULL ELSE AreaOfFocus END AS AreaOfFocus,
+			--CASE WHEN ExperimentGroup = 'A' AND Experiment = 'Job role' THEN NULL ELSE JobRole END AS JobRole,
 			CONVERT(DATE, FirstSignupPageVisit) AS FirstSignupPageVisit,
 			ExperimentGroup,
 			Experiment,
@@ -183,8 +185,21 @@ FROM SignupEvents
 )
 
 
-SELECT * INTO community.Signup_Full FROM JoinedTable
-
+SELECT  a.*,
+		CustomerType
+INTO community.Signup_Full 
+FROM 
+(
+	SELECT *
+	FROM JoinedTable
+)a
+LEFT JOIN
+(
+	SELECT  OpenId,
+			CustomerType
+	FROM community.CustomerTypes
+)b
+ON a.OpenId = b.OpenId
 	
 	
 	

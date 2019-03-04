@@ -1,4 +1,5 @@
 -- This query contains all users (key) and activity in their onboarding phase on the platform
+-- Time est. to run query: 24mm23ss
 
 
 /*
@@ -294,23 +295,13 @@ FROM
 
 , SignupQuestionAdded AS
 (
-	SELECT  a.*,
-			CustomerType
+	SELECT  a.*
 	FROM
 	(
 		SELECT  *,
 				CASE WHEN ActiveDays30To60DaysAfterSignup > 0 THEN 1 ELSE 0 END AS Retained
 		FROM TotalActivityAdded
 	) a
-		
-	LEFT JOIN
-	(
-		SELECT  OpenId,
-				CustomerType
-		FROM community.CustomerTypes
-	) b
-	ON a.UserId = b.OpenId
-	
 )
 		
 		
