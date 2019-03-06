@@ -25,6 +25,7 @@ SELECT	UserId,
 		CompanyId,
 		DisplayName,
 		CompanyType,
+		Country,
 		Source,
 		MonthYear,
 		SignupDate,
@@ -37,6 +38,7 @@ FROM
 			a.CompanyId,
 			DisplayName,
 			CompanyType,
+			Country,
 			MonthYear,
 			SignupDate,
 			Source,
@@ -51,6 +53,7 @@ FROM
 		SELECT	a.OpenId, 
 				a.CompanyId,
 				DisplayName,
+				Country,
 				-- If the created date of the company is not set in platform analytics, this value will be NULL (4 cases known on 20180525)
 				CASE 
 					WHEN CompanyType IS NULL
@@ -71,7 +74,8 @@ FROM
 			SELECT	OpenId, 
 					CompanyId, 
 					CONVERT(DATE, OldSignupDate) AS SignupDate,
-					dateadd(month,datediff(month,0,OldSignupDate),0) AS MonthYear 
+					dateadd(month,datediff(month,0,OldSignupDate),0) AS MonthYear,
+					Country
 			FROM PlatformAnalytics_PullPush_Platform_User_Current 
 			WHERE OpenId != '' AND NOT(CompanyId LIKE '%Mendix%')
 		) a
@@ -152,6 +156,7 @@ FROM
 				CompanyId,
 				DisplayName,				 
 				CompanyType, 
+				Country,
 				MonthYear, 
 				SignupDate, 
 				Source, 
@@ -187,6 +192,7 @@ FROM
 				CompanyId,
 				DisplayName,				 
 				CompanyType, 
+				Country,
 				MonthYear, 
 				SignupDate, 
 				Source, 
@@ -226,6 +232,7 @@ FROM
 				CompanyId,
 				DisplayName,				 
 				CompanyType, 
+				Country,
 				MonthYear, 
 				SignupDate, 
 				Source, 
@@ -274,6 +281,7 @@ FROM
 			CompanyId,
 			DisplayName,				 
 			CompanyType, 
+			Country,
 			MonthYear, 
 			SignupDate, 
 			Source, 

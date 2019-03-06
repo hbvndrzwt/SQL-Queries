@@ -117,7 +117,7 @@ FROM
 			LEFT JOIN 
 			(
 				SELECT  OpenId, 
-						OldSignupDate AS SignupDate 
+						OldSignupDate AS SignupDate
 				FROM PlatformAnalytics_PullPush_Platform_User_Current
 			) b
 			ON a.UserId = b.OpenId
@@ -215,59 +215,40 @@ LEFT JOIN
 ON a.UserId = b.UserId AND a.MonthYear = b.FirstMonthExistingUser
 
 
-
-/*
-SELECT  a.*,
-		CASE WHEN NumberInvitesToNonMembers IS NULL THEN 0 ELSE NumberInvitesToNonMembers END AS NumberInvitesToNonMembers,
-		InvitesSent
-INTO #InvitesPerUser
-FROM
+SELECT *
+INTO #ExistingUsersTotal_Certification
+FROM 
 (
-	SELECT *
-	FROM #ExistingUsersTotal
-)a
-
-LEFT JOIN
-(
-	SELECT  OpenIdSender,
-			YearMonth,	
-			COUNT(OpenIdSender) AS InvitesSent,		
-			SUM(CASE WHEN InviteDate < SignupDateReceiver OR (SignupDateReceiver IS NULL AND NOT(InviteDate IS NULL)) THEN 1 ELSE 0 END) AS NumberInvitesToNonMembers
+	SELECT  a.*,
+			CASE WHEN ExpertCertifiedDate < MonthYear THEN 'ExpertCertified' ELSE
+			CASE WHEN AdvancedCertifiedDate < MonthYear THEN 'AdvancedCertified' ELSE
+			CASE WHEN RapidCertifiedDate < MonthYear THEN 'RapidCertified' 
+			ELSE  'NotCertified' END END END AS Certification
 	FROM
 	(
-		SELECT	OpenIdSender,
-				SignupDateReceiver,
-				InviteDate,
-				DATEADD(month, DATEDIFF(month, 0, InviteDate), 0) AS YearMonth		
-		FROM 
-		(
-			SELECT	OpenId AS OpenIdSender,
-					ExtraInfo1 AS EmailAddressReceiver, 
-					Timestamp AS InviteDate 
-			FROM PlatformAnalytics_PullPush_Platform_Event
-			WHERE EventType IN ('AppInviteSent','PlatformInviteSent','ProjectInviteSent','ReferralInviteSent')
-			AND NOT(CompanyId LIKE '%Mendix%') AND OpenId != ''
-		) a
-		
-		LEFT JOIN
-		(
-			SELECT	CompanyId AS CompanyIdReceiver,
-					email,
-					OldSignupDate AS SignupDateReceiver 
-			FROM PlatformAnalytics_PullPush_Platform_User_Current 
-			WHERE NOT(CompanyId LIKE '%Mendix%') AND OpenId != ''
-		) b
-		ON a.EmailAddressReceiver = b.email
+		SELECT *
+		FROM #ExistingUsersTotal
 	)a
-	GROUP BY OpenIdSender,
-			 YearMonth
-)b
-ON a.UserId = b.OpenIdSender AND a.MonthYear = b.YearMonth
-*/
+
+	LEFT JOIN
+	(
+		SELECT  OpenId,
+				RapidCertified,
+				RapidCertifiedDate,
+				AdvancedCertified,
+				AdvancedCertifiedDate,
+				ExpertCertified,
+				ExpertCertifiedDate
+		FROM PlatformAnalytics_PullPush_Platform_User_Current
+
+	)b
+	ON a.UserId = b.OpenId
+)a
+
 
 SELECT  *
 INTO community.Product_Existing_Users
-FROM #ExistingUsersTotal
+FROM #ExistingUsersTotal_Certification
 
 
 
