@@ -186,7 +186,10 @@ FROM SignupEvents
 
 
 SELECT  a.*,
-		CustomerType
+		CustomerType,
+		MQL__c,
+		MQL_Date_Enter__c,
+		Converted_to_SO__c
 INTO community.Signup_Full 
 FROM 
 (
@@ -200,9 +203,55 @@ LEFT JOIN
 	FROM community.CustomerTypes
 )b
 ON a.OpenId = b.OpenId
-	
-	
-	
+LEFT JOIN
+(
+	SELECT  a.OpenId,
+			b._Id AS LeadId,
+			Company,
+			LeadSource,
+			Status,
+			MQL__c,
+			MQL_Date_Enter__c,
+			Converted_to_SO__c
+	FROM
+	(
+		SELECT  OpenId,
+				LeadId
+		FROM PlatformAnalytics_Processed_Platform_UserWithLeadId
+	)a
+	RIGHT JOIN
+	(
+		SELECT  _Id,
+				Company,
+				LeadSource,
+				Status,
+				MQL_Date_Enter__c,
+				CAST(MQL__c AS int) AS MQL__c
+		FROM SFDC_Push_SFDC_Lead_Current
+		WHERE LeadSource IN ('Marketing - Inbound')
+		AND Status NOT IN ('Bad data','Education','Partner')
+		AND Company NOT LIKE '%Mendix%'
+		AND Sales_Unit__c NOT LIKE '%Unknown%'
+		AND Sales_Unit__c NOT LIKE '%Channel%'
+		AND Lead_Owner_String__c NOT LIKE '%Brandenburg%'
+		AND Lead_Owner_String__c NOT LIKE '%Fields%'
+		AND Lead_Owner_String__c NOT LIKE '%Kukesh%'
+		AND MQL_Date_Enter__c IS NOT NULL
+		
+	)b
+	ON a.LeadId = b._Id
+	LEFT JOIN
+	(
+		SELECT  _Id,
+				CAST(Converted_to_SO__c AS int) AS Converted_to_SO__c
+		FROM SFDC_Push_SFDC_Lead_Current
+		--WHERE Status IN ('Converted with opportunity')
+	)c
+	ON b._Id = c._Id
+	WHERE a.OpenId IS NOT NULL
+)c
+ON a.OpenId = c.OpenId
+
 	
 	
 	
